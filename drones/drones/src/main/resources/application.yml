@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dronesdb
+    username: postgres
+    password: "123"
+    hikari:
+      maximum-pool-size: 10
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+app:
+  jwt:
+    secret: super-secreto-demostracion-pon-algo-mas-largo-porfa-1234567890
+    ttl-minutes: 120
