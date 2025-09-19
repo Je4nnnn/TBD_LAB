@@ -141,3 +141,7 @@ LIMIT 5;
 SELECT * FROM resumen_misiones_completadas ORDER BY tipo;
 -- Para refrescarla en producción de forma no bloqueante:
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY resumen_misiones_completadas;
+
+
+SELECT email, rol FROM drones_db.usuarios;
+

@@ -160,3 +160,10 @@ WITH NO DATA;
 -- Índice único para poder usar REFRESH CONCURRENTLY
 CREATE UNIQUE INDEX IF NOT EXISTS resumen_misiones_completadas_tipo_idx
   ON resumen_misiones_completadas (tipo);
+
+
+
+ALTER DATABASE dronesdb SET search_path TO drones_db, public;
+-- (si usas otro rol para la conexión)
+-- ALTER ROLE postgres SET search_path TO drones_db, public;
+

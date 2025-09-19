@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,11 +24,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
+
+        // 1) Preflight CORS: no tocar autenticación ni validar token
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            chain.doFilter(req, res);
+            return;
+        }
+
+        // 2) Autenticación por JWT (si viene el header)
         String hdr = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (hdr != null && hdr.startsWith("Bearer ")) {
             String token = hdr.substring(7);
             try {
-                var claims = jwt.parse(token).getBody(); // API 0.11.x
+                var claims = jwt.parse(token).getBody();
                 String userId = claims.getSubject();
                 String rol = String.valueOf(claims.get("rol"));
                 var auth = new UsernamePasswordAuthenticationToken(
@@ -37,6 +46,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // token inválido -> seguimos sin autenticación
             }
         }
+
         chain.doFilter(req, res);
     }
 }

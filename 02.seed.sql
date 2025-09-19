@@ -111,3 +111,17 @@ SELECT  *   FROM usuarios;
 SELECT drones     FROM drones;
 SELECT misiones   FROM misiones;
 SELECT * FROM resumen_misiones_completadas ORDER BY tipo;
+
+
+
+
+-- 1) Habilita pgcrypto (una vez)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- 2) Re-hash para el usuario admin con bcrypt (cost 10)
+UPDATE drones_db.usuarios
+SET password_hash = crypt('admin123', gen_salt('bf', 10))
+WHERE email = 'admin@drones.local';
+
+-- 3) Verifica
+SELECT nombre,email, password_hash FROM drones_db.usuarios WHERE email = 'admin@drones.local';
