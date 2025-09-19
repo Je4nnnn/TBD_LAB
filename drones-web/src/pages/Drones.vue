@@ -1,29 +1,36 @@
+<!-- src/pages/Drones.vue -->
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Drones } from '@/api'
+import { onMounted, ref } from 'vue';
+import { api } from '../api';
 
-const lista = ref([])
-const error = ref('')
-const cargando = ref(false)
+const drones = ref([]);
+const loading = ref(true);
+const error = ref('');
 
-async function cargar () {
-  cargando.value = true; error.value = ''
-  try { lista.value = await Drones.list() }
-  catch (e) { error.value = e?.response?.data?.message || e.message }
-  finally { cargando.value = false }
-}
-onMounted(cargar)
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/drones');
+    drones.value = data;
+  } catch (e) {
+    error.value = 'No se pudo cargar la lista';
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <template>
-  <div class="text-white space-y-4">
-    <h1 class="text-2xl font-semibold">Drones</h1>
-    <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
-    <div v-for="d in lista" :key="d.id" class="p-4 rounded-xl bg-white/5 border border-white/10">
-      <div class="font-semibold">{{ d.modelo }}</div>
-      <div class="text-xs opacity-70">Batería: {{ d.bateria_pct }}%</div>
-      <div class="text-xs opacity-70">Estado: {{ d.estado }}</div>
-      <div class="text-xs opacity-70" v-if="d.ultima_lat != null">Última pos: {{ d.ultima_lat }}, {{ d.ultima_lon }}</div>
+  <div style="text-align:center">
+    <h1>Drones</h1>
+    <div v-if="loading">Cargando...</div>
+    <div v-else-if="error" style="color:#f55">{{ error }}</div>
+    <div v-else style="max-width:560px; margin:0 auto; text-align:left;">
+      <div v-for="d in drones" :key="d.id" style="border:1px solid #444; border-radius:8px; padding:12px; margin:10px 0;">
+        <div><b>{{ d.modelo }}</b></div>
+        <div>Estado: {{ d.estado }}</div>
+        <div>Batería: {{ d.bateria_pct }}%</div>
+        <div v-if="d.ultima_lat != null">Última pos: {{ d.ultima_lat }}, {{ d.ultima_lon }}</div>
+      </div>
     </div>
   </div>
 </template>

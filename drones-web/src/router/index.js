@@ -1,26 +1,30 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Login from '@/pages/Login.vue'
-import Drones from '@/pages/Drones.vue'
-import Misiones from '@/pages/Misiones.vue'
-import Reportes from '@/pages/Reportes.vue'
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+import Login from '../pages/Login.vue';
+import Drones from '../pages/Drones.vue';
+import Misiones from '../pages/Misiones.vue';
+import Reportes from '../pages/Reportes.vue';
+
+const routes = [
+  { path: '/login', component: Login },
+  { path: '/drones', component: Drones, meta: { auth: true } },
+  { path: '/misiones', component: Misiones, meta: { auth: true } },
+  { path: '/reportes', component: Reportes, meta: { auth: true } },
+  { path: '/', redirect: '/drones' },
+  { path: '/:pathMatch(.*)*', redirect: '/drones' },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: [
-    { path: '/login', component: Login, meta: { public: true } },
-    { path: '/', redirect: '/drones' },
-    { path: '/drones', component: Drones },
-    { path: '/misiones', component: Misiones },
-    { path: '/reportes', component: Reportes },
-    { path: '/:pathMatch(.*)*', redirect: '/' },
-  ],
-})
+  routes,
+});
 
 router.beforeEach((to) => {
-  const isPublic = to.meta?.public
-  const token = localStorage.getItem('token')
-  if (!isPublic && !token) return '/login'
-  return true
-})
+  const hasToken = !!localStorage.getItem('token');
 
-export default router
+  if (to.meta?.auth && !hasToken) return '/login';
+  if (to.path === '/login' && hasToken) return '/drones';
+  return true;
+});
+
+export default router;

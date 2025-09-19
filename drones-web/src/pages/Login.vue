@@ -1,36 +1,54 @@
+<!-- src/pages/Login.vue -->
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Auth } from '@/api'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { api } from '../api';
 
-const email = ref('admin@drones.local')
-const password = ref('admin123')
-const cargando = ref(false)
-const error = ref('')
-const router = useRouter()
+const email = ref('admin@drones.local');
+const password = ref('admin123');
+const loading = ref(false);
+const error = ref('');
+const router = useRouter();
 
-async function onSubmit () {
-  cargando.value = true; error.value = ''
+const doLogin = async () => {
+  loading.value = true;
+  error.value = '';
   try {
-    const { token } = await Auth.login(email.value, password.value)
-    localStorage.setItem('token', token)
-    router.push('/drones')
+    const { data } = await api.post('/auth/login', {
+      email: email.value,
+      password: password.value
+    });
+    localStorage.setItem('token', data.token);
+    router.push('/drones');
   } catch (e) {
-    error.value = e?.response?.data?.message || e.message || 'Error de login'
-  } finally { cargando.value = false }
-}
+    error.value = 'Credenciales inválidas';
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
 <template>
-  <div class="max-w-sm mx-auto mt-16 p-6 rounded-xl bg-white/5 border border-white/10 text-white">
-    <h1 class="text-xl font-semibold mb-4">Iniciar sesión</h1>
-    <p v-if="error" class="text-red-400 text-sm mb-3">{{ error }}</p>
-    <form @submit.prevent="onSubmit" class="space-y-3">
-      <input v-model="email" type="email" placeholder="Email" class="w-full p-2 rounded bg-white/10" />
-      <input v-model="password" type="password" placeholder="Contraseña" class="w-full p-2 rounded bg-white/10" />
-      <button :disabled="cargando" class="w-full p-2 rounded bg-blue-600 hover:bg-blue-500">
-        {{ cargando ? 'Entrando…' : 'Entrar' }}
+  <div style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
+    <div style="width:360px; padding:24px; border:1px solid #444; border-radius:8px; text-align:center;">
+      <h1 style="margin-bottom:16px;">Iniciar sesión</h1>
+      <input
+        v-model="email"
+        placeholder="Email"
+        style="width:100%; padding:8px; margin-bottom:8px;"
+        autocomplete="username"
+      />
+      <input
+        v-model="password"
+        type="password"
+        placeholder="Contraseña"
+        style="width:100%; padding:8px; margin-bottom:12px;"
+        autocomplete="current-password"
+      />
+      <button :disabled="loading" @click="doLogin" style="width:100%; padding:8px;">
+        {{ loading ? 'Ingresando...' : 'Entrar' }}
       </button>
-    </form>
+      <p v-if="error" style="color:#f55; margin-top:8px;">{{ error }}</p>
+    </div>
   </div>
 </template>
