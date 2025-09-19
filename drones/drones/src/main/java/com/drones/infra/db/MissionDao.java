@@ -34,33 +34,48 @@ public class MissionDao {
 
     public void completar(UUID misionId, Integer bateriaConsumidaPct){
         jdbc.update("""
-      UPDATE drones_db.misiones
-         SET estado='Completada', fin = COALESCE(fin, now()), bateria_consumida_pct = COALESCE(?, bateria_consumida_pct)
-       WHERE id = ?
-      """, bateriaConsumidaPct, misionId);
+            UPDATE drones_db.misiones
+               SET estado='Completada',
+                   fin = COALESCE(fin, now()),
+                   bateria_consumida_pct = COALESCE(?, bateria_consumida_pct)
+             WHERE id = ?
+        """, bateriaConsumidaPct, misionId);
     }
 
     public void fallar(UUID misionId, String motivo){
-        // Puedes guardar el motivo en otra tabla si quieres auditar
-        jdbc.update("UPDATE drones_db.misiones SET estado='Fallida', fin = COALESCE(fin, now()) WHERE id = ?", misionId);
+        jdbc.update("""
+            UPDATE drones_db.misiones
+               SET estado='Fallida',
+                   fin = COALESCE(fin, now()),
+                   motivo_fallo = COALESCE(?, motivo_fallo)
+             WHERE id = ?
+        """, motivo, misionId);
     }
 
     public List<Map<String,Object>> listar(){
         return jdbc.queryForList("""
-      SELECT m.id, m.tipo, m.estado, m.inicio, m.fin, m.dron_id,
-             d.modelo AS dron_modelo,
-             m.bateria_consumida_pct, m.ruta_planeada
-        FROM drones_db.misiones m
-        LEFT JOIN drones_db.drones d ON d.id = m.dron_id
-       ORDER BY m.creado_en DESC
-    """);
+            SELECT m.id, m.tipo, m.estado, m.inicio, m.fin, m.dron_id,
+                   d.modelo AS dron_modelo,
+                   m.bateria_consumida_pct, m.ruta_planeada, m.motivo_fallo
+              FROM drones_db.misiones m
+              LEFT JOIN drones_db.drones d ON d.id = m.dron_id
+             ORDER BY m.creado_en DESC
+        """);
     }
 
     public void registrarTelemetria(UUID misionId, Instant ts, double lat, double lon,
                                     Double alt, Integer bateria, Double vel){
+        // 'pos' se genera automáticamente; incluimos dron_id desde la misión
         jdbc.update("""
-      INSERT INTO drones_db.registro_vuelo (mision_id, ts, lat, lon, alt_m, bateria_pct, vel_mps)
-      VALUES (?,?,?,?,?,?,?)
-    """, misionId, Timestamp.from(ts!=null?ts:Instant.now()), lat, lon, alt, bateria, vel);
+            INSERT INTO drones_db.registro_vuelo
+                (mision_id, dron_id, ts, lat, lon, alt_m, bateria_pct, vel_mps)
+            SELECT ?, m.dron_id, ?, ?, ?, ?, ?, ?
+              FROM drones_db.misiones m
+             WHERE m.id = ?
+        """,
+                misionId,
+                Timestamp.from(ts != null ? ts : Instant.now()),
+                lat, lon, alt, bateria, vel,
+                misionId);
     }
 }

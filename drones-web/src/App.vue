@@ -1,16 +1,17 @@
 <!-- src/App.vue -->
-<script setup>
-import { RouterView, useRoute } from 'vue-router';
-import { computed } from 'vue';
-import NavBar from './components/NavBar.vue';
-
-const route = useRoute();
-const showNav = computed(() => route.path !== '/login');
-</script>
-
 <template>
-  <div>
-    <NavBar v-if="showNav" />
+  <div class="app">
     <RouterView />
   </div>
 </template>
+
+<script setup>
+import { RouterView } from 'vue-router'
+</script>
+
+<style>
+/* Estilos base muy mínimos para no interferir con tus vistas */
+* { box-sizing: border-box; }
+html, body, #app, .app { height: 100%; margin: 0; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+</style>

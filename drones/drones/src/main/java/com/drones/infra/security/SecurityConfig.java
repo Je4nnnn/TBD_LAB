@@ -62,7 +62,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()    // preflight
                         .requestMatchers("/api/public/**", "/public/**").permitAll()
-                        .requestMatchers("/api/auth/**", "/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

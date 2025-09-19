@@ -13,10 +13,16 @@ public class DroneController {
 
     @GetMapping
     public List<Map<String,Object>> list(){
+        // Derivamos lat/lon desde la geometría 'pos' (Opción B)
         return jdbc.queryForList("""
-      SELECT id, modelo, estado, bateria_pct, ultima_lat, ultima_lon
-      FROM drones_db.drones
-      ORDER BY modelo
-    """);
+            SELECT id,
+                   modelo,
+                   estado,
+                   bateria_pct,
+                   ST_Y(pos::geometry) AS ultima_lat,
+                   ST_X(pos::geometry) AS ultima_lon
+              FROM drones_db.drones
+             ORDER BY modelo
+        """);
     }
 }

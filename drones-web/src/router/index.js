@@ -1,30 +1,23 @@
-// src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router';
-import Login from '../pages/Login.vue';
-import Drones from '../pages/Drones.vue';
-import Misiones from '../pages/Misiones.vue';
-import Reportes from '../pages/Reportes.vue';
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import Login from '../views/LoginView.vue'
+import Dashboard from '../views/DashboardView.vue'
 
 const routes = [
-  { path: '/login', component: Login },
-  { path: '/drones', component: Drones, meta: { auth: true } },
-  { path: '/misiones', component: Misiones, meta: { auth: true } },
-  { path: '/reportes', component: Reportes, meta: { auth: true } },
-  { path: '/', redirect: '/drones' },
-  { path: '/:pathMatch(.*)*', redirect: '/drones' },
-];
+  { path: '/login', name: 'login', component: Login },
+  { path: '/', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } }
+]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-});
+  routes
+})
 
 router.beforeEach((to) => {
-  const hasToken = !!localStorage.getItem('token');
+  const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth.token) {
+    return { name: 'login' }
+  }
+})
 
-  if (to.meta?.auth && !hasToken) return '/login';
-  if (to.path === '/login' && hasToken) return '/drones';
-  return true;
-});
-
-export default router;
+export default router

@@ -1,29 +1,28 @@
 // src/api.js
-import axios from 'axios';
+import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8081/api',
-});
+  baseURL: import.meta.env.VITE_API_BASE, // p.ej. http://localhost:8081/api
+})
 
-// Adjunta token en cada request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
-// Si el backend responde 401, limpiamos y redirigimos a login
-let isRedirecting = false;
+// Antes borraba token y hacía window.location.href='/login' en cualquier 401
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    if (err?.response?.status === 401 && !isRedirecting) {
-      isRedirecting = true;
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    if (err?.response?.status === 401) {
+      console.warn('401 recibido. Manejar en la vista según corresponda.')
+      // Puedes emitir un evento global, mostrar toast, etc.
     }
-    return Promise.reject(err);
+    return Promise.reject(err)
   }
-);
+)
 
-export { api };
+export { api }
