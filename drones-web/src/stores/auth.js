@@ -24,6 +24,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token')
       localStorage.removeItem('nombre')
       localStorage.removeItem('rol')
+      window.location.href = '/login'
     }
   }
 })

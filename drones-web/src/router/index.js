@@ -5,6 +5,7 @@ import Dashboard from '../views/DashboardView.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
+  { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
   { path: '/', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } }
 ]
 
