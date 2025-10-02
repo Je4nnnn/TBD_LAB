@@ -5,11 +5,15 @@ import { createRouter, createWebHistory } from 'vue-router';
 const Login = () => import('../views/LoginView.vue');
 const Dashboard = () => import('../views/DashboardView.vue'); // tu vista principal
 const Reports = () => import('../views/ReportsView.vue');     // opcional
+const Reportes = () => import('../views/Reportes.vue')
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
   { path: '/', name: 'home', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/reportes', name: 'reportes', component: Reports, meta: { requiresAuth: true, roles: ['ADMIN'] } },
+  { path: '/', name: 'home', component: () => import('../views/DashboardView.vue'), meta: { requiresAuth: true } },
+  { path: '/reportes', name: 'reportes', component: Reportes, meta: { requiresAuth: true } },
+
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });
