@@ -9,32 +9,45 @@
     </header>
 
     <section class="grid">
+      <!-- Drones -->
       <div class="card">
         <h3>Drones</h3>
         <button @click="loadDrones">Refrescar</button>
         <table v-if="drones.length">
           <thead>
-            <tr><th>Modelo</th><th>Estado</th><th>Batería%</th><th>Lat</th><th>Lon</th></tr>
+            <tr>
+              <th>Modelo</th>
+              <th>Estado</th>
+              <th>Batería%</th>
+              <th>Lat</th>
+              <th>Lon</th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="d in drones" :key="d.id">
               <td>{{ d.modelo }}</td>
               <td>{{ d.estado }}</td>
               <td>{{ d.bateria_pct }}</td>
-              <td>{{ (d.ultima_lat ?? '').toFixed?.(6) }}</td>
-              <td>{{ (d.ultima_lon ?? '').toFixed?.(6) }}</td>
+              <td>{{ fmt(d.ultima_lat) }}</td>
+              <td>{{ fmt(d.ultima_lon) }}</td>
             </tr>
           </tbody>
         </table>
         <p v-else>Cargando...</p>
       </div>
 
+      <!-- Misiones -->
       <div class="card">
         <h3>Misiones</h3>
         <button @click="loadMisiones">Refrescar</button>
         <table v-if="misiones.length">
           <thead>
-            <tr><th>Tipo</th><th>Estado</th><th>Dron</th><th>Acciones</th></tr>
+            <tr>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Dron</th>
+              <th>Acciones</th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="m in misiones" :key="m.id">
@@ -51,25 +64,28 @@
         <p v-else>Cargando...</p>
       </div>
 
+      <!-- Mapa interactivo -->
       <div class="card map">
-        <h3>Mapa (placeholder)</h3>
-        <div id="map" style="height: 380px; background:#eef; border:1px dashed #99c;
-             display:flex; align-items:center; justify-content:center;">
-          Aquí va el mapa (Leaflet/MapLibre/Google)
-        </div>
+        <h3>Mapa</h3>
+        <DronesMap :drones="drones" :missions="misiones" />
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import api from '../api/axios'
+import DronesMap from '../components/DronesMap.vue' // requiere el componente de mapa
 
 const auth = useAuthStore()
 const drones = ref([])
 const misiones = ref([])
+let pollTimer = null
+const POLL_MS = 5000
+
+const fmt = (v) => (typeof v === 'number' ? v.toFixed(6) : '')
 
 const loadDrones = async () => {
   const { data } = await api.get('/drones')
@@ -82,19 +98,27 @@ const loadMisiones = async () => {
 
 const completar = async (id) => {
   await api.post(`/misiones/${id}/completar`, {})
-  await loadMisiones()
+  await Promise.all([loadMisiones(), loadDrones()])
 }
 const fallar = async (id) => {
   const motivo = prompt('Motivo de la falla (opcional):') || null
   await api.post(`/misiones/${id}/fallar`, { motivo })
-  await loadMisiones()
+  await Promise.all([loadMisiones(), loadDrones()])
 }
 
 const logout = () => auth.logout()
 
-onMounted(() => {
-  loadDrones()
-  loadMisiones()
+onMounted(async () => {
+  await Promise.all([loadDrones(), loadMisiones()])
+  // “Tiempo real” simple con polling
+  pollTimer = setInterval(() => {
+    loadDrones()
+    loadMisiones()
+  }, POLL_MS)
+})
+
+onBeforeUnmount(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 
@@ -107,4 +131,7 @@ header { display:flex; align-items:center; justify-content:space-between; margin
 table { width: 100%; border-collapse: collapse; margin-top: .5rem; }
 th, td { border: 1px solid #eee; padding: .4rem; text-align: left; }
 .actions button { margin-right: .25rem; }
+
+/* Leaflet dentro de la tarjeta */
+.map #map, .map .leaflet-container { min-height: 380px; width: 100%; }
 </style>

@@ -141,7 +141,7 @@ END $$;
 -- 6) Chequeos rápidos
 -- =========================
 -- Quita los comentarios si quieres ver resultados al final del seed:
--- SELECT * FROM usuarios;
+--SELECT * FROM usuarios;
 -- SELECT id, modelo, estado, bateria_pct, ST_Y(pos::geometry) AS lat, ST_X(pos::geometry) AS lon FROM drones ORDER BY modelo;
 -- SELECT * FROM misiones ORDER BY creado_en DESC;
 -- SELECT * FROM resumen_misiones_completadas ORDER BY tipo;
@@ -150,4 +150,30 @@ END $$;
 SET search_path TO drones_db, public;
 SELECT id, nombre, email, rol,password_hash FROM usuarios WHERE email IN ('admin@drones.local','op1@drones.local');
 
+
+
+
+
+
+----USAR ESTOOOO PARA PONER UNA MISION EN PENDIENTEEEE
+
+-- usa gen_random_uuid() (pgcrypto). Si no lo tienes, más abajo te dejo alternativa.
+INSERT INTO misiones (id, tipo, estado, inicio, fin, dron_id, ruta_planeada)
+VALUES (
+  gen_random_uuid(),
+  'Inspección',
+  'Pendiente',
+  NULL,
+  NULL,
+  NULL,
+  jsonb_build_object(
+    'waypoints',
+    jsonb_build_array(
+      jsonb_build_array(-33.45, -70.66),
+      jsonb_build_array(-33.46, -70.67),
+      jsonb_build_array(-33.47, -70.68)
+    )
+  )
+)
+RETURNING id, tipo, estado;
 
