@@ -1,29 +1,32 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
-// Si ya tienes tus vistas, ajusta las rutas a tus nombres reales
-const Login = () => import('../views/LoginView.vue');
-const Dashboard = () => import('../views/DashboardView.vue'); // tu vista principal
-const Reports = () => import('../views/ReportsView.vue');     // opcional
-const Reportes = () => import('../views/Reportes.vue')
+import LoginView from '../views/LoginView.vue';
+import DashboardView from '../views/DashboardView.vue';
+import ReportsView from '../views/ReportsView.vue'; // ← existe o pega el de abajo
 
 const routes = [
-  { path: '/login', name: 'login', component: Login },
-  { path: '/', name: 'home', component: Dashboard, meta: { requiresAuth: true } },
-  { path: '/reportes', name: 'reportes', component: Reports, meta: { requiresAuth: true, roles: ['ADMIN'] } },
-  { path: '/', name: 'home', component: () => import('../views/DashboardView.vue'), meta: { requiresAuth: true } },
-  { path: '/reportes', name: 'reportes', component: Reportes, meta: { requiresAuth: true } },
-
+  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
+  { path: '/',      name: 'home',  component: DashboardView },
+  { path: '/reportes', name: 'reportes', component: ReportsView },
+  // { path: '/:pathMatch(.*)*', redirect: '/' },
 ];
 
-const router = createRouter({ history: createWebHistory(), routes });
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token');
-  const rol = localStorage.getItem('rol') || 'OPERADOR';
-  if (to.meta.requiresAuth && !token) return next('/login');
-  if (to.meta.roles && !to.meta.roles.includes(rol)) return next('/');
-  next();
+router.beforeEach((to) => {
+  const auth = useAuthStore();
+  const isAuth = auth.isAuth;
+
+  if (!to.meta.public && !isAuth) {
+    return { name: 'login' };
+  }
+  if (to.name === 'login' && isAuth) {
+    return { name: 'home' };
+  }
 });
 
 export default router;

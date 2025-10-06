@@ -1,16 +1,17 @@
-import axios from 'axios'
-import { useAuthStore } from '../stores/auth'
+import axios from 'axios';
+
+// Usa el backend directamente (evita 404 en Vite)
+const BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:8081/api').trim();
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8081/api'
-})
+  baseURL: BASE,
+  withCredentials: false,
+});
 
 api.interceptors.request.use((config) => {
-  const auth = useAuthStore()
-  if (auth.token) {
-    config.headers.Authorization = `Bearer ${auth.token}`
-  }
-  return config
-})
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-export default api
+export default api;
