@@ -1,37 +1,7 @@
 <template>
   <div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-logo">D</span>
-        <h2>Drone<span>.io</span></h2>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <a href="#" class="sidebar-link active">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-        <a href="/drones" class="sidebar-link">
-          <span class="icon">🛸</span>
-          <span>Drones</span>
-        </a>
-        <a href="/misiones" class="sidebar-link">
-          <span class="icon">🎯</span>
-          <span>Misiones</span>
-        </a>
-        <a href="/reportes" class="sidebar-link">
-          <span class="icon">📈</span>
-          <span>Reportes</span>
-        </a>
-      </nav>
-      
-      <div class="sidebar-footer">
-        <button class="logout-btn" @click="logout">
-          <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
+    <!-- Sidebar reutilizable -->
+    <Sidebar :active="'dashboard'" @navigate="navigateTo" @logout="logout" />
     
     <!-- Main Content -->
     <main class="main-content">
@@ -70,7 +40,7 @@
           <div class="summary-card">
             <div class="card-icon">✅</div>
             <div class="card-info">
-              <h3>{{ misiones.filter(m => m.estado === 'COMPLETADA').length }}</h3>
+              <h3>{{ misiones.filter(m => m.estado?.toLowerCase() === 'completada').length }}</h3>
               <p>Misiones Completadas</p>
             </div>
           </div>
@@ -175,8 +145,9 @@
           <div class="card-header">
             <h2><span class="icon">🗺️</span> Mapa de Operaciones</h2>
           </div>
-          <div id="map" class="map-placeholder">
-            <span>Próximamente: integración con Leaflet/MapLibre/Google Maps</span>
+          <div class="card map">
+            <h3>Mapa</h3>
+            <DronesMap :drones="drones" :misiones="misiones" />
           </div>
         </div>
       </div>
@@ -189,6 +160,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import api from '../api/axios'
+import DronesMap from '../components/DronesMap.vue';
+import Sidebar from '../components/Sidebar.vue';
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -235,6 +208,10 @@ onMounted(() => {
   loadDrones()
   loadMisiones()
 })
+
+const navigateTo = (route) => {
+  router.push(route);
+};
 </script>
 
 <style scoped>

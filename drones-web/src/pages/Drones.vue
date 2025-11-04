@@ -1,198 +1,3 @@
-<!-- src/pages/Drones.vue -->
-<script setup>
-import { onMounted, ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
-import { api } from '../api';
-
-const auth = useAuthStore();
-const router = useRouter();
-
-// Estado principal
-const drones = ref([]);
-const loading = ref(true);
-const error = ref('');
-
-// Filtros y búsqueda
-const searchQuery = ref('');
-const statusFilter = ref('all');
-const sortBy = ref('modelo');
-
-// Estados disponibles
-const estados = [
-  { value: 'all', label: 'Todos los estados' },
-  { value: 'disponible', label: 'Disponible' },
-  { value: 'en vuelo', label: 'En vuelo' },
-  { value: 'en mantenimiento', label: 'En mantenimiento' }
-];
-
-// Opciones de ordenamiento
-const sortOptions = [
-  { value: 'modelo', label: 'Modelo (A-Z)' },
-  { value: 'modelo-desc', label: 'Modelo (Z-A)' },
-  { value: 'capacidad', label: 'Capacidad (menor)' },
-  { value: 'capacidad-desc', label: 'Capacidad (mayor)' },
-  { value: 'autonomia', label: 'Autonomía (menor)' },
-  { value: 'autonomia-desc', label: 'Autonomía (mayor)' }
-];
-
-// Datos mock para desarrollo
-const mockDrones = [
-  {
-    id: "DRN-001",
-    modelo: "Aquila X2",
-    capacidadCargaKg: 5.5,
-    autonomiaMin: 42,
-    estado: "disponible"
-  },
-  {
-    id: "DRN-002",
-    modelo: "Falcon M1",
-    capacidadCargaKg: 3.2,
-    autonomiaMin: 30,
-    estado: "en vuelo"
-  },
-  {
-    id: "DRN-003",
-    modelo: "Orion L",
-    capacidadCargaKg: 8.0,
-    autonomiaMin: 55,
-    estado: "en mantenimiento"
-  },
-  {
-    id: "DRN-004",
-    modelo: "Phoenix Pro",
-    capacidadCargaKg: 12.0,
-    autonomiaMin: 75,
-    estado: "disponible"
-  },
-  {
-    id: "DRN-005",
-    modelo: "Eagle V3",
-    capacidadCargaKg: 7.8,
-    autonomiaMin: 48,
-    estado: "en vuelo"
-  },
-  {
-    id: "DRN-006",
-    modelo: "Hawk Mini",
-    capacidadCargaKg: 2.1,
-    autonomiaMin: 25,
-    estado: "en mantenimiento"
-  }
-];
-
-// Computadas para filtrado y ordenamiento
-const filteredDrones = computed(() => {
-  let result = [...drones.value];
-
-  // Filtrar por búsqueda
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(drone => 
-      drone.modelo.toLowerCase().includes(query) ||
-      drone.id.toLowerCase().includes(query)
-    );
-  }
-
-  // Filtrar por estado
-  if (statusFilter.value !== 'all') {
-    result = result.filter(drone => drone.estado === statusFilter.value);
-  }
-
-  // Ordenar
-  result.sort((a, b) => {
-    let aVal, bVal;
-    
-    if (sortBy.value.includes('modelo')) {
-      aVal = a.modelo.toLowerCase();
-      bVal = b.modelo.toLowerCase();
-    } else if (sortBy.value.includes('capacidad')) {
-      aVal = a.capacidadCargaKg;
-      bVal = b.capacidadCargaKg;
-    } else if (sortBy.value.includes('autonomia')) {
-      aVal = a.autonomiaMin;
-      bVal = b.autonomiaMin;
-    }
-
-    if (sortBy.value.includes('-desc')) {
-      return bVal > aVal ? 1 : -1;
-    }
-    return aVal > bVal ? 1 : -1;
-  });
-
-  return result;
-});
-
-// Contadores por estado
-const statusCounts = computed(() => {
-  const counts = {
-    disponible: 0,
-    'en vuelo': 0,
-    'en mantenimiento': 0,
-    total: drones.value.length
-  };
-
-  drones.value.forEach(drone => {
-    if (drone && drone.estado) {
-      counts[drone.estado]++;
-    }
-  });
-  
-  return counts;
-});
-
-
-
-// Función para cargar drones
-const loadDrones = async () => {
-  loading.value = true;
-  error.value = '';
-  
-  try {
-    // Intentar cargar desde API primero
-    const { data } = await api.get('/drones');
-    if (data && Array.isArray(data)) {
-      drones.value = data;
-    } else {
-      throw new Error('Datos de API inválidos');
-    }
-  } catch (e) {
-    console.warn('API no disponible, usando datos mock:', e.message);
-    // Si falla la API, usar datos mock
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simular carga
-    drones.value = [...mockDrones]; // Clonar array para forzar reactividad
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Función para reintentar carga
-const retryLoad = () => {
-  loadDrones();
-};
-
-
-
-// Función para navegar
-const navigateTo = (route) => {
-  router.push(route);
-};
-
-// Función para cerrar sesión
-const logout = () => {
-  auth.logout();
-  router.push('/login');
-};
-
-// Inicializar con datos mock inmediatamente para testing
-drones.value = [...mockDrones];
-
-onMounted(() => {
-  loadDrones();
-});
-</script>
-
 <template>
   <div class="dashboard-container">
     <!-- Sidebar -->
@@ -423,6 +228,207 @@ onMounted(() => {
     </main>
   </div>
 </template>
+
+<!-- src/pages/Drones.vue -->
+<script setup>
+import { onMounted, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { api } from '../api';
+
+const auth = useAuthStore();
+const router = useRouter();
+
+// Estado principal
+const drones = ref([]);
+const loading = ref(true);
+const error = ref('');
+
+// Filtros y búsqueda
+const searchQuery = ref('');
+const statusFilter = ref('all');
+const sortBy = ref('modelo');
+
+// Estados disponibles
+const estados = [
+  { value: 'all', label: 'Todos los estados' },
+  { value: 'disponible', label: 'Disponible' },
+  { value: 'en vuelo', label: 'En vuelo' },
+  { value: 'en mantenimiento', label: 'En mantenimiento' }
+];
+
+// Opciones de ordenamiento
+const sortOptions = [
+  { value: 'modelo', label: 'Modelo (A-Z)' },
+  { value: 'modelo-desc', label: 'Modelo (Z-A)' },
+  { value: 'capacidad', label: 'Capacidad (menor)' },
+  { value: 'capacidad-desc', label: 'Capacidad (mayor)' },
+  { value: 'autonomia', label: 'Autonomía (menor)' },
+  { value: 'autonomia-desc', label: 'Autonomía (mayor)' }
+];
+
+// Datos mock para desarrollo
+const mockDrones = [
+  {
+    id: "DRN-001",
+    modelo: "Aquila X2",
+    capacidadCargaKg: 5.5,
+    autonomiaMin: 42,
+    estado: "disponible"
+  },
+  {
+    id: "DRN-002",
+    modelo: "Falcon M1",
+    capacidadCargaKg: 3.2,
+    autonomiaMin: 30,
+    estado: "en vuelo"
+  },
+  {
+    id: "DRN-003",
+    modelo: "Orion L",
+    capacidadCargaKg: 8.0,
+    autonomiaMin: 55,
+    estado: "en mantenimiento"
+  },
+  {
+    id: "DRN-004",
+    modelo: "Phoenix Pro",
+    capacidadCargaKg: 12.0,
+    autonomiaMin: 75,
+    estado: "disponible"
+  },
+  {
+    id: "DRN-005",
+    modelo: "Eagle V3",
+    capacidadCargaKg: 7.8,
+    autonomiaMin: 48,
+    estado: "en vuelo"
+  },
+  {
+    id: "DRN-006",
+    modelo: "Hawk Mini",
+    capacidadCargaKg: 2.1,
+    autonomiaMin: 25,
+    estado: "en mantenimiento"
+  }
+];
+
+// Computadas para filtrado y ordenamiento
+const filteredDrones = computed(() => {
+  let result = [...drones.value];
+
+  // Filtrar por búsqueda
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter(drone => 
+      drone.modelo.toLowerCase().includes(query) ||
+      drone.id.toLowerCase().includes(query)
+    );
+  }
+
+  // Filtrar por estado (insensible a mayúsculas y espacios)
+  if (statusFilter.value !== 'all') {
+    const filtro = statusFilter.value.trim().toLowerCase();
+    result = result.filter(drone =>
+      drone.estado && drone.estado.trim().toLowerCase() === filtro
+    );
+  }
+
+  // Ordenar
+  result.sort((a, b) => {
+    let aVal, bVal;
+    
+    if (sortBy.value.includes('modelo')) {
+      aVal = a.modelo.toLowerCase();
+      bVal = b.modelo.toLowerCase();
+    } else if (sortBy.value.includes('capacidad')) {
+      aVal = a.capacidadCargaKg;
+      bVal = b.capacidadCargaKg;
+    } else if (sortBy.value.includes('autonomia')) {
+      aVal = a.autonomiaMin;
+      bVal = b.autonomiaMin;
+    }
+
+    if (sortBy.value.includes('-desc')) {
+      return bVal > aVal ? 1 : -1;
+    }
+    return aVal > bVal ? 1 : -1;
+  });
+
+  return result;
+});
+
+// Contadores por estado
+const statusCounts = computed(() => {
+  const counts = {
+    disponible: 0,
+    'en vuelo': 0,
+    'en mantenimiento': 0,
+    total: drones.value.length
+  };
+
+  drones.value.forEach(drone => {
+    if (drone && drone.estado) {
+      const estado = drone.estado.trim().toLowerCase();
+      if (estado === 'disponible') counts.disponible++;
+      else if (estado === 'en vuelo') counts['en vuelo']++;
+      else if (estado === 'en mantenimiento') counts['en mantenimiento']++;
+    }
+  });
+
+  return counts;
+});
+
+
+
+// Función para cargar drones
+const loadDrones = async () => {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    // Intentar cargar desde API primero
+    const { data } = await api.get('/drones');
+    if (data && Array.isArray(data)) {
+      drones.value = data;
+    } else {
+      throw new Error('Datos de API inválidos');
+    }
+  } catch (e) {
+    console.warn('API no disponible, usando datos mock:', e.message);
+    // Si falla la API, usar datos mock
+    await new Promise(resolve => setTimeout(resolve, 800)); // Simular carga
+    drones.value = [...mockDrones]; // Clonar array para forzar reactividad
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Función para reintentar carga
+const retryLoad = () => {
+  loadDrones();
+};
+
+
+
+// Función para navegar
+const navigateTo = (route) => {
+  router.push(route);
+};
+
+// Función para cerrar sesión
+const logout = () => {
+  auth.logout();
+  router.push('/login');
+};
+
+// Inicializar con datos mock inmediatamente para testing
+drones.value = [...mockDrones];
+
+onMounted(() => {
+  loadDrones();
+});
+</script>
 
 <style scoped>
 

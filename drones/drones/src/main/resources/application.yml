@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/dronesdb
     username: postgres
-    password: lologay1
+    password: Admin
     hikari:
       maximum-pool-size: 10
   jackson:

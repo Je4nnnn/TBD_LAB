@@ -3,7 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/TBD_LAB.iml" filepath="$PROJECT_DIR$/.idea/TBD_LAB.iml" />
+<<<<<<< HEAD
+=======
       <module fileurl="file://$PROJECT_DIR$/drones/drones/drones.iml" filepath="$PROJECT_DIR$/drones/drones/drones.iml" />
+>>>>>>> origin/main
     </modules>
   </component>
 </project>

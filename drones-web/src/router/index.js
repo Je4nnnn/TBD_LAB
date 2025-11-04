@@ -1,27 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import Login from '../views/LoginView.vue'
-import Dashboard from '../views/DashboardView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+
+import LoginView from '../views/LoginView.vue';
+import DashboardView from '../views/DashboardView.vue';
+import ReportsView from '../views/Reportes.vue'; // ← existe o pega el de abajo
 
 const routes = [
-  { path: '/login', name: 'login', component: Login },
+  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
+  { path: '/reportes', name: 'reportes', component: ReportsView },
   { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
-  { path: '/', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/misiones', name: 'misiones', component: () => import('../pages/Misiones.vue') },
-  { path: '/reportes', name: 'reportes', component: () => import('../pages/Reportes.vue') },
   { path: '/drones', name: 'drones', component: () => import('../pages/Drones.vue') }
-]
+];
+
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 router.beforeEach((to) => {
-  const auth = useAuthStore()
-  if (to.meta.requiresAuth && !auth.token) {
-    return { name: 'login' }
-  }
-})
+  const auth = useAuthStore();
+  const isAuth = auth.isAuth;
 
-export default router
+  if (!to.meta.public && !isAuth) {
+    return { name: 'login' };
+  }
+  if (to.name === 'login' && isAuth) {
+    return { name: 'home' };
+  }
+});
+
+export default router;

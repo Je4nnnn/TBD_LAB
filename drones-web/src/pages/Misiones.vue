@@ -1,8 +1,259 @@
+<template>
+  <div class="dashboard-container">
+    <!-- Sidebar reutilizable -->
+    <Sidebar :active="'misiones'" @navigate="navigateTo" @logout="logout" />
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="content-header">
+        <h1 class="header-title">Gestión de Misiones</h1>
+        <div class="user-info">
+          <div class="user-details">
+            <span class="user-name">{{ auth.nombre }}</span>
+            <span class="user-role">({{ auth.rol }})</span>
+          </div>
+          <div class="user-avatar">{{ auth.nombre.charAt(0) }}</div>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <div class="dashboard-content">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-icon">🎯</div>
+            <div class="card-info">
+              <h3>{{ statusCounts.total }}</h3>
+              <p>Total de Misiones</p>
+            </div>
+          </div>
+          
+          <div class="summary-card">
+            <div class="card-icon">⏳</div>
+            <div class="card-info">
+              <h3>{{ statusCounts['Pendiente'] }}</h3>
+              <p>Pendientes</p>
+            </div>
+          </div>
+          
+          <div class="summary-card">
+            <div class="card-icon">🚀</div>
+            <div class="card-info">
+              <h3>{{ statusCounts['En Progreso'] }}</h3>
+              <p>En Progreso</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">✅</div>
+            <div class="card-info">
+              <h3>{{ statusCounts['Completada'] }}</h3>
+              <p>Completadas</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Misiones Section -->
+        <div class="section-title">Control de Misiones</div>
+        
+        <div class="data-card">
+          <div class="card-header">
+            <h2><span class="icon">🎯</span> Lista de Misiones</h2>
+            <div style="display: flex; gap: 1rem;">
+              <button class="crear-btn" @click="showCrearModal = true">+ Crear Misión</button>
+              <button class="refresh-btn" @click="loadMisiones" :disabled="loading">
+                {{ loading ? 'Cargando...' : 'Refrescar' }}
+              </button>
+            </div>
+          </div>
+          <!-- Modal Crear Misión, solo HTML y Vue -->
+          <div v-if="showCrearModal" class="modal-overlay">
+            <div class="modal-content">
+              <h2>Crear Nueva Misión</h2>
+              <form @submit.prevent="crearMision">
+                <div class="form-group">
+                  <label for="tipoNueva">Tipo de misión</label>
+                  <input id="tipoNueva" v-model="tipoNueva" type="text" required placeholder="Ej: Inspección" />
+                </div>
+                <div class="form-group">
+                  <label for="rutaNueva">Ruta planeada</label>
+                  <input id="rutaNueva" v-model="rutaNueva" type="text" required placeholder="Ej: Punto A, Punto B" />
+                </div>
+                <div class="form-group">
+                  <label for="dronNueva">Asignar dron</label>
+                  <select id="dronNueva" v-model="dronNueva" required class="select-dron">
+                    <option value="" disabled>Selecciona un dron</option>
+                    <template v-for="d in dronesDisponibles" :key="d.id">
+                      <option :value="d.id">{{ d.modelo }} ({{ d.id }})</option>
+                    </template>
+                  </select>
+                </div>
+                <div class="modal-actions">
+                  <button type="submit" class="crear-btn" :disabled="creando">
+                    {{ creando ? 'Creando...' : 'Crear' }}
+                  </button>
+                  <button type="button" class="cancelar-btn" @click="showCrearModal = false" :disabled="creando">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+
+          <!-- Controles de filtrado y búsqueda -->
+          <div class="controls">
+            <div class="search-input">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Buscar por tipo, ID o dron..."
+                :aria-label="'Buscar misiones'"
+              />
+            </div>
+            
+            <div class="filter-select">
+              <select v-model="statusFilter" :aria-label="'Filtrar por estado'">
+                <option v-for="estado in estados" :key="estado.value" :value="estado.value">
+                  {{ estado.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="sort-select">
+              <select v-model="sortBy" :aria-label="'Ordenar por'">
+                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Estados de carga y contenido -->
+          <div class="table-container">
+            <!-- Loading state -->
+            <div v-if="loading" class="loading-state">
+              <div class="spinner"></div>
+              <p class="empty-msg">Cargando misiones...</p>
+            </div>
+
+            <!-- Error state -->
+            <div v-else-if="error" class="error-state">
+              <div class="error-icon">⚠️</div>
+              <h3>Error al cargar las misiones</h3>
+              <p class="empty-msg">{{ error }}</p>
+              <button @click="retryLoad" class="retry-button">
+                Reintentar
+              </button>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else-if="filteredMisiones.length === 0" class="empty-state">
+              <div class="empty-icon">🎯</div>
+              <h3>No se encontraron misiones</h3>
+              <p v-if="searchQuery || statusFilter !== 'all'" class="empty-msg">
+                Intenta ajustar los filtros de búsqueda
+              </p>
+              <p v-else class="empty-msg">
+                No hay misiones registradas en el sistema
+              </p>
+            </div>
+
+            <!-- Lista de misiones - Vista móvil (cards) -->
+            <div v-else class="misiones-container">
+              <div class="misiones-grid mobile-view">
+                <article
+                  v-for="mision in filteredMisiones"
+                  :key="mision.id"
+                  class="mision-card"
+                  :aria-label="`Misión ${mision.tipo}`"
+                >
+                  <div class="card-header">
+                    <h3 class="mision-tipo">{{ mision.tipo }}</h3>
+                    <span class="mision-id">{{ mision.id }}</span>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="spec">
+                      <span class="spec-label">Dron:</span>
+                      <span class="spec-value">{{ mision.dron_modelo || 'No asignado' }}</span>
+                    </div>
+                    <div class="spec">
+                      <span class="spec-label">Inicio:</span>
+                      <span class="spec-value">{{ formatDate(mision.fecha_inicio) }}</span>
+                    </div>
+                    <div class="spec">
+                      <span class="spec-label">Duración:</span>
+                      <span class="spec-value">{{ calculateDuration(mision.fecha_inicio, mision.fecha_fin) }}</span>
+                    </div>
+                    <div class="spec">
+                      <span class="spec-label">Puntos ruta:</span>
+                      <span class="spec-value">{{ mision.ruta?.waypoints?.length || 0 }}</span>
+                    </div>
+                  </div>
+
+                  <div class="card-footer">
+                    <span
+                      class="status-badge"
+                      :class="mision.estado.toLowerCase().replace(' ', '_')"
+                      :aria-label="`Estado: ${mision.estado}`"
+                    >
+                      {{ mision.estado }}
+                    </span>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Vista desktop (tabla) -->
+              <div class="misiones-table desktop-view">
+                <table role="table" aria-label="Lista de misiones">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Tipo</th>
+                      <th>Dron</th>
+                      <th>Inicio</th>
+                      <th>Duración</th>
+                      <th>Puntos</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="mision in filteredMisiones" :key="mision.id">
+                      <td class="mision-id-cell">{{ mision.id }}</td>
+                      <td class="mision-tipo-cell">{{ mision.tipo }}</td>
+                      <td class="mision-dron-cell">{{ mision.dron_modelo || 'No asignado' }}</td>
+                      <td class="mision-fecha-cell">{{ formatDate(mision.fecha_inicio) }}</td>
+                      <td class="mision-duracion-cell">{{ calculateDuration(mision.fecha_inicio, mision.fecha_fin) }}</td>
+                      <td class="mision-puntos-cell">{{ mision.ruta?.waypoints?.length || 0 }}</td>
+                      <td class="mision-status-cell">
+                        <span
+                          class="status-badge"
+                          :class="mision.estado.toLowerCase().replace(' ', '_')"
+                          :aria-label="`Estado: ${mision.estado}`"
+                        >
+                          {{ mision.estado }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
+
 <script setup>
 import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { api } from '../api';
+import Sidebar from '../components/Sidebar.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -11,6 +262,50 @@ const router = useRouter();
 const misiones = ref([]);
 const loading = ref(true);
 const error = ref('');
+
+// Estado para crear misión (no afecta nada existente)
+const showCrearModal = ref(false);
+const tipoNueva = ref('');
+const rutaNueva = ref('');
+const dronNueva = ref('');
+const creando = ref(false);
+const dronesDisponibles = ref([]);
+
+const crearMision = async () => {
+  creando.value = true;
+  error.value = '';
+  try {
+    const body = {
+      tipo: tipoNueva.value,
+      ruta_planeada: rutaNueva.value,
+      dron_id: dronNueva.value
+    };
+    await api.post('/misiones', body);
+    tipoNueva.value = '';
+    rutaNueva.value = '';
+    dronNueva.value = '';
+    showCrearModal.value = false;
+    loadMisiones();
+  } catch (e) {
+    error.value = 'No se pudo crear la misión';
+    console.error(e);
+  } finally {
+    creando.value = false;
+  }
+};
+
+const loadDrones = async () => {
+  try {
+    const { data } = await api.get('/drones', {
+      headers: {
+        Authorization: `Bearer ${auth.token}`
+      }
+    });
+    dronesDisponibles.value = data;
+  } catch (e) {
+    dronesDisponibles.value = [];
+  }
+};
 
 // Filtros y búsqueda
 const searchQuery = ref('');
@@ -255,253 +550,21 @@ const logout = () => {
 
 onMounted(() => {
   loadMisiones();
+  loadDrones();
 });
 </script>
 
-<template>
-  <div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-logo">D</span>
-        <h2>Drone<span>.io</span></h2>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <a @click="navigateTo('/')" class="sidebar-link">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-        <a @click="navigateTo('/drones')" class="sidebar-link">
-          <span class="icon">🛸</span>
-          <span>Drones</span>
-        </a>
-        <a @click="navigateTo('/misiones')" class="sidebar-link active">
-          <span class="icon">🎯</span>
-          <span>Misiones</span>
-        </a>
-        <a @click="navigateTo('/reportes')" class="sidebar-link">
-          <span class="icon">📈</span>
-          <span>Reportes</span>
-        </a>
-      </nav>
-      
-      <div class="sidebar-footer">
-        <button class="logout-btn" @click="logout">
-          <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Header -->
-      <header class="content-header">
-        <h1 class="header-title">Gestión de Misiones</h1>
-        <div class="user-info">
-          <div class="user-details">
-            <span class="user-name">{{ auth.nombre }}</span>
-            <span class="user-role">({{ auth.rol }})</span>
-          </div>
-          <div class="user-avatar">{{ auth.nombre.charAt(0) }}</div>
-        </div>
-      </header>
-
-      <!-- Dashboard Content -->
-      <div class="dashboard-content">
-        <!-- Summary Cards -->
-        <div class="summary-cards">
-          <div class="summary-card">
-            <div class="card-icon">🎯</div>
-            <div class="card-info">
-              <h3>{{ statusCounts.total }}</h3>
-              <p>Total de Misiones</p>
-            </div>
-          </div>
-          
-          <div class="summary-card">
-            <div class="card-icon">⏳</div>
-            <div class="card-info">
-              <h3>{{ statusCounts['Pendiente'] }}</h3>
-              <p>Pendientes</p>
-            </div>
-          </div>
-          
-          <div class="summary-card">
-            <div class="card-icon">🚀</div>
-            <div class="card-info">
-              <h3>{{ statusCounts['En Progreso'] }}</h3>
-              <p>En Progreso</p>
-            </div>
-          </div>
-
-          <div class="summary-card">
-            <div class="card-icon">✅</div>
-            <div class="card-info">
-              <h3>{{ statusCounts['Completada'] }}</h3>
-              <p>Completadas</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Misiones Section -->
-        <div class="section-title">Control de Misiones</div>
-        
-        <div class="data-card">
-          <div class="card-header">
-            <h2><span class="icon">🎯</span> Lista de Misiones</h2>
-            <button class="refresh-btn" @click="loadMisiones" :disabled="loading">
-              {{ loading ? 'Cargando...' : 'Refrescar' }}
-            </button>
-          </div>
-
-          <!-- Controles de filtrado y búsqueda -->
-          <div class="controls">
-            <div class="search-input">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Buscar por tipo, ID o dron..."
-                :aria-label="'Buscar misiones'"
-              />
-            </div>
-            
-            <div class="filter-select">
-              <select v-model="statusFilter" :aria-label="'Filtrar por estado'">
-                <option v-for="estado in estados" :key="estado.value" :value="estado.value">
-                  {{ estado.label }}
-                </option>
-              </select>
-            </div>
-
-            <div class="sort-select">
-              <select v-model="sortBy" :aria-label="'Ordenar por'">
-                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Estados de carga y contenido -->
-          <div class="table-container">
-            <!-- Loading state -->
-            <div v-if="loading" class="loading-state">
-              <div class="spinner"></div>
-              <p class="empty-msg">Cargando misiones...</p>
-            </div>
-
-            <!-- Error state -->
-            <div v-else-if="error" class="error-state">
-              <div class="error-icon">⚠️</div>
-              <h3>Error al cargar las misiones</h3>
-              <p class="empty-msg">{{ error }}</p>
-              <button @click="retryLoad" class="retry-button">
-                Reintentar
-              </button>
-            </div>
-
-            <!-- Empty state -->
-            <div v-else-if="filteredMisiones.length === 0" class="empty-state">
-              <div class="empty-icon">🎯</div>
-              <h3>No se encontraron misiones</h3>
-              <p v-if="searchQuery || statusFilter !== 'all'" class="empty-msg">
-                Intenta ajustar los filtros de búsqueda
-              </p>
-              <p v-else class="empty-msg">
-                No hay misiones registradas en el sistema
-              </p>
-            </div>
-
-            <!-- Lista de misiones - Vista móvil (cards) -->
-            <div v-else class="misiones-container">
-              <div class="misiones-grid mobile-view">
-                <article
-                  v-for="mision in filteredMisiones"
-                  :key="mision.id"
-                  class="mision-card"
-                  :aria-label="`Misión ${mision.tipo}`"
-                >
-                  <div class="card-header">
-                    <h3 class="mision-tipo">{{ mision.tipo }}</h3>
-                    <span class="mision-id">{{ mision.id }}</span>
-                  </div>
-                  
-                  <div class="card-body">
-                    <div class="spec">
-                      <span class="spec-label">Dron:</span>
-                      <span class="spec-value">{{ mision.dron_modelo || 'No asignado' }}</span>
-                    </div>
-                    <div class="spec">
-                      <span class="spec-label">Inicio:</span>
-                      <span class="spec-value">{{ formatDate(mision.fecha_inicio) }}</span>
-                    </div>
-                    <div class="spec">
-                      <span class="spec-label">Duración:</span>
-                      <span class="spec-value">{{ calculateDuration(mision.fecha_inicio, mision.fecha_fin) }}</span>
-                    </div>
-                    <div class="spec">
-                      <span class="spec-label">Puntos ruta:</span>
-                      <span class="spec-value">{{ mision.ruta?.waypoints?.length || 0 }}</span>
-                    </div>
-                  </div>
-
-                  <div class="card-footer">
-                    <span
-                      class="status-badge"
-                      :class="mision.estado.toLowerCase().replace(' ', '_')"
-                      :aria-label="`Estado: ${mision.estado}`"
-                    >
-                      {{ mision.estado }}
-                    </span>
-                  </div>
-                </article>
-              </div>
-
-              <!-- Vista desktop (tabla) -->
-              <div class="misiones-table desktop-view">
-                <table role="table" aria-label="Lista de misiones">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Tipo</th>
-                      <th>Dron</th>
-                      <th>Inicio</th>
-                      <th>Duración</th>
-                      <th>Puntos</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="mision in filteredMisiones" :key="mision.id">
-                      <td class="mision-id-cell">{{ mision.id }}</td>
-                      <td class="mision-tipo-cell">{{ mision.tipo }}</td>
-                      <td class="mision-dron-cell">{{ mision.dron_modelo || 'No asignado' }}</td>
-                      <td class="mision-fecha-cell">{{ formatDate(mision.fecha_inicio) }}</td>
-                      <td class="mision-duracion-cell">{{ calculateDuration(mision.fecha_inicio, mision.fecha_fin) }}</td>
-                      <td class="mision-puntos-cell">{{ mision.ruta?.waypoints?.length || 0 }}</td>
-                      <td class="mision-status-cell">
-                        <span
-                          class="status-badge"
-                          :class="mision.estado.toLowerCase().replace(' ', '_')"
-                          :aria-label="`Estado: ${mision.estado}`"
-                        >
-                          {{ mision.estado }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</template>
-
 <style scoped>
+/* === SELECT DRON === */
+.select-dron {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
 
 /* === FUENTES === */
 .dashboard-container {
@@ -1167,5 +1230,98 @@ tbody tr:nth-child(even) {
 table tr:focus-within {
   outline: 2px solid #6366f1;
   outline-offset: -2px;
+}
+
+/* Modal Crear Misión */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(99,102,241,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(99,102,241,0.18);
+  padding: 2rem 2.5rem;
+  min-width: 320px;
+  max-width: 90vw;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.modal-content h2 {
+  margin: 0 0 1rem 0;
+  color: #6366f1;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+}
+.form-group input {
+  padding: 10px 14px;
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  background: #f8fafc;
+  transition: border-color 0.2s;
+}
+.form-group input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.crear-btn {
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  transition: background 0.2s;
+}
+.crear-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+.crear-btn:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+.cancelar-btn {
+  background: #e0e7ff;
+  color: #6366f1;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cancelar-btn:hover:not(:disabled) {
+  background: #c7d2fe;
 }
 </style>
