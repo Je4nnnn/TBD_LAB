@@ -2,10 +2,12 @@ package com.drones.controller;
 
 import com.drones.dto.MissionDtos.CompletarReq;
 import com.drones.dto.MissionDtos.FallarReq;
+import com.drones.dto.MissionDtos.CrearReq; // Importamos el nuevo DTO
 import com.drones.service.MissionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -16,6 +18,14 @@ public class MissionController {
 
     @GetMapping
     public ResponseEntity<?> listar(){ return ResponseEntity.ok(missions.listar()); }
+
+    // --- NUEVO ENDPOINT ---
+    @PostMapping
+    public ResponseEntity<?> crear(@RequestBody CrearReq req){
+        UUID id = missions.crear(req);
+        return ResponseEntity.ok(Map.of("id", id));
+    }
+    // ----------------------
 
     @PostMapping("/{misionId}/asignar/{dronId}")
     public ResponseEntity<?> asignar(@PathVariable UUID misionId, @PathVariable UUID dronId){

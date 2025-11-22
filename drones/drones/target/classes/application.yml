@@ -20,6 +20,7 @@ app:
       - "http://localhost:5173"
       - "http://localhost:5174"
       - "http://localhost:8080"
+      - "http://localhost:8081"
 
 app.jwt:
   secret: "super-secreto-demostracion-pon-algo-mas-largo-porfa-1234567890"

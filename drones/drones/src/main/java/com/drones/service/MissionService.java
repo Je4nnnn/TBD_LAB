@@ -16,6 +16,12 @@ public class MissionService {
 
     public List<Map<String,Object>> listar() { return missions.listar(); }
 
+    // --- NUEVO MÉTODO ---
+    public UUID crear(MissionDtos.CrearReq req) {
+        return missions.crear(req.tipo(), req.ruta_json());
+    }
+    // --------------------
+
     public void asignar(UUID misionId, UUID dronId) { missions.asignar(misionId, dronId); }
 
     public void completar(UUID misionId, Integer bateriaConsumida) {
