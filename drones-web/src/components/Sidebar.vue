@@ -5,7 +5,7 @@
       <h2>Drone<span>.io</span></h2>
     </div>
     <nav class="sidebar-nav">
-      <a @click="$emit('navigate', '/')" class="sidebar-link">
+      <a @click="$emit('navigate', '/dashboard')" class="sidebar-link">
         <span class="icon">📊</span>
         <span>Dashboard</span>
       </a>

@@ -9,7 +9,7 @@ const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/reportes', name: 'reportes', component: ReportsView },
   { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
-  { path: '/', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
+  { path: '/dashboard', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/misiones', name: 'misiones', component: () => import('../pages/Misiones.vue') },
   { path: '/drones', name: 'drones', component: () => import('../pages/Drones.vue') }
 ];
