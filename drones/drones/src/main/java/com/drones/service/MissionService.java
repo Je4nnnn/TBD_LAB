@@ -22,6 +22,16 @@ public class MissionService {
     }
     // --------------------
 
+    // NUEVO: actualizar misión
+    public void actualizar(UUID id, MissionDtos.ActualizarReq req) {
+        missions.actualizar(id, req.tipo(), req.ruta_json());
+    }
+
+    // NUEVO: eliminar misión
+    public void eliminar(UUID id) {
+        missions.eliminar(id);
+    }
+
     public void asignar(UUID misionId, UUID dronId) { missions.asignar(misionId, dronId); }
 
     public void completar(UUID misionId, Integer bateriaConsumida) {

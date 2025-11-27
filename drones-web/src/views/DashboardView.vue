@@ -6,8 +6,8 @@
 
         <!-- --- BOTONES DE ADMINISTRADOR --- -->
         <template v-if="auth.user.rol === 'ADMIN'">
-          <RouterLink class="btn btn-accent" to="/misiones/nueva">
-            + Nueva Misión
+          <RouterLink class="btn btn-accent" to="/misiones">
+            + Gestionar misiones
           </RouterLink>
 
           <RouterLink class="btn btn-secondary" to="/drones/nuevo">

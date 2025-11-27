@@ -6,11 +6,13 @@ import DashboardView from '../views/DashboardView.vue';
 import ReportsView from '../views/ReportsView.vue';
 import CreateMissionView from '../views/CreateMissionView.vue';
 import CreateDroneView from '../views/CreateDroneView.vue'; // <--- IMPORTAR NUEVA VISTA
+import Misiones from '../pages/Misiones.vue';
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/',      name: 'home',  component: DashboardView },
   { path: '/reportes', name: 'reportes', component: ReportsView },
+  { path: '/misiones', name: 'misiones', component: Misiones },
   { path: '/misiones/nueva', name: 'crear-mision', component: CreateMissionView },
 
   // --- NUEVA RUTA ---

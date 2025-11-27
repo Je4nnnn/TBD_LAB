@@ -1,5 +1,6 @@
 package com.drones.controller;
 
+import com.drones.dto.MissionDtos;
 import com.drones.dto.MissionDtos.CompletarReq;
 import com.drones.dto.MissionDtos.FallarReq;
 import com.drones.dto.MissionDtos.CrearReq; // Importamos el nuevo DTO
@@ -26,6 +27,23 @@ public class MissionController {
         return ResponseEntity.ok(Map.of("id", id));
     }
     // ----------------------
+
+    // NUEVO: actualizar misión
+    @PutMapping("/{misionId}")
+    public ResponseEntity<?> actualizar(
+            @PathVariable UUID misionId,
+            @RequestBody MissionDtos.ActualizarReq req
+    ) {
+        missions.actualizar(misionId, req);
+        return ResponseEntity.noContent().build();
+    }
+
+    // NUEVO: eliminar misión (DELETE duro)
+    @DeleteMapping("/{misionId}")
+    public ResponseEntity<?> eliminar(@PathVariable UUID misionId) {
+        missions.eliminar(misionId);
+        return ResponseEntity.noContent().build();
+    }
 
     @PostMapping("/{misionId}/asignar/{dronId}")
     public ResponseEntity<?> asignar(@PathVariable UUID misionId, @PathVariable UUID dronId){

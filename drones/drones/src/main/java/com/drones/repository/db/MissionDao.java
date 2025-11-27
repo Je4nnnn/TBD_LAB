@@ -21,7 +21,39 @@ public class MissionDao {
         return jdbc.queryForObject(sql, UUID.class, tipo, "Pendiente", rutaPlaneadaJson);
     }
 
+    // NUEVO: actualizar misión
+    public void actualizar(UUID misionId, String tipo, String rutaPlaneadaJson) {
+        jdbc.update("""
+            UPDATE drones_db.misiones
+               SET tipo = ?,
+                   ruta_planeada = ?::jsonb
+             WHERE id = ?
+        """, tipo, rutaPlaneadaJson, misionId);
+    }
+
+    // NUEVO: eliminar misión (DELETE duro)
+    public void eliminar(UUID misionId) {
+        jdbc.update("""
+            DELETE FROM drones_db.misiones
+             WHERE id = ?
+        """, misionId);
+    }
+
+
     public void asignar(UUID misionId, UUID dronId){
+        // 1) Ver si la misión NO tenía dron antes
+        UUID dronAnterior = null;
+        try {
+            dronAnterior = jdbc.queryForObject("""
+            SELECT dron_id
+              FROM drones_db.misiones
+             WHERE id = ?
+        """, UUID.class, misionId);
+        } catch (Exception e) {
+            // Si no existe la misión o viene null, dronAnterior se queda null
+        }
+
+        // 2) Llamar al procedimiento almacenado que se tiene
         jdbc.execute((Connection con) -> {
             try (var call = con.prepareCall("CALL drones_db.asignar_mision_a_dron(?,?)")) {
                 call.setObject(1, misionId);
@@ -30,7 +62,17 @@ public class MissionDao {
             }
             return null;
         });
+
+        // 3) Si ANTES no tenía dron asignado, marcamos inicio = now()
+        if (dronAnterior == null) {
+            jdbc.update("""
+            UPDATE drones_db.misiones
+               SET inicio = COALESCE(inicio, now())
+             WHERE id = ?
+        """, misionId);
+        }
     }
+
 
     public void completar(UUID misionId, Integer bateriaConsumidaPct){
         jdbc.update("""

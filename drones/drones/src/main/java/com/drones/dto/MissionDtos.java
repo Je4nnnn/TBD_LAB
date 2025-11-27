@@ -8,6 +8,8 @@ public final class MissionDtos {
     // Agregamos este nuevo record para la creación
     public record CrearReq(String tipo, String ruta_json) {}
 
+    public record ActualizarReq(String tipo, String ruta_json) {}
+
     public record CompletarReq(Integer bateria_consumida_pct) {}
     public record FallarReq(String motivo) {}
     public record TelemetriaReq(
