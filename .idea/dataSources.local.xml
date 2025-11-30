@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="dataSourceStorageLocal" created-in="IU-252.25557.131">
-    <data-source name="dronesdb@localhost" uuid="528b02e2-c246-4687-942b-c20e71c1c64f">
+  <component name="dataSourceStorageLocal" created-in="IU-251.29188.11">
+    <data-source name="dronesBD@localhost [2]" uuid="6643b594-055a-495a-b87a-c7d0677ac7c9">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
-      <user-name>postgres</user-name>
       <schema-mapping />
     </data-source>
   </component>
