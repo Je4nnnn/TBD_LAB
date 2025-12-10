@@ -3,17 +3,20 @@ import { useAuthStore } from '../stores/auth';
 
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
-import ReportsView from '../views/Reportes.vue'; // ← existe o pega el de abajo
+import ReportsView from '../views/ReportsView.vue';
+import CreateMissionView from '../views/CreateMissionView.vue';
+import CreateDroneView from '../views/CreateDroneView.vue'; // <--- IMPORTAR NUEVA VISTA
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
+  { path: '/',      name: 'home',  component: DashboardView },
   { path: '/reportes', name: 'reportes', component: ReportsView },
-  { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
-  { path: '/', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
-  { path: '/misiones', name: 'misiones', component: () => import('../pages/Misiones.vue') },
-  { path: '/drones', name: 'drones', component: () => import('../pages/Drones.vue') }
-];
+  { path: '/misiones/nueva', name: 'crear-mision', component: CreateMissionView },
 
+  // --- NUEVA RUTA ---
+  { path: '/drones/nuevo', name: 'crear-dron', component: CreateDroneView },
+  // ------------------
+];
 
 const router = createRouter({
   history: createWebHistory(),
