@@ -61,7 +61,7 @@
           <div class="card-header">
             <h2><span class="icon">🎯</span> Lista de Misiones</h2>
             <div style="display: flex; gap: 1rem;">
-              <button class="crear-btn" @click="showCrearModal = true">+ Crear Misión</button>
+                <router-link class="crear-btn" :to="{ name: 'crear-mision' }">+ Crear Misión</router-link>
               <button class="refresh-btn" @click="loadMisiones" :disabled="loading">
                 {{ loading ? 'Cargando...' : 'Refrescar' }}
               </button>

@@ -11,9 +11,11 @@ const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/',      name: 'home',  component: DashboardView },
   { path: '/reportes', name: 'reportes', component: ReportsView },
+  { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
+  { path: '/dashboard', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
+  { path: '/misiones', name: 'misiones', component: () => import('../pages/Misiones.vue') },
+  { path: '/drones', name: 'drones', component: () => import('../pages/Drones.vue') },
   { path: '/misiones/nueva', name: 'crear-mision', component: CreateMissionView },
-
-  // --- NUEVA RUTA ---
   { path: '/drones/nuevo', name: 'crear-dron', component: CreateDroneView },
   // ------------------
 ];

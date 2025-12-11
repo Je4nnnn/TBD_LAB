@@ -1,12 +1,27 @@
 <template>
-  <div class="page">
-    <header>
-      <h2>Crear Nueva Misión</h2>
-      <router-link class="btn" to="/">Cancelar</router-link>
-    </header>
+  <div class="dashboard-container">
+    <Sidebar :active="'misiones'" @navigate="navigateTo" @logout="logout" />
 
-    <div class="form-container">
-      <div class="card">
+    <main class="main-content">
+      <header class="content-header">
+        <h1 class="header-title">Crear Nueva Misión</h1>
+        <div class="user-info">
+          <div class="user-details">
+            <span class="user-name">{{ auth.nombre }}</span>
+            <span class="user-role">({{ auth.rol }})</span>
+          </div>
+          <div class="user-avatar">{{ auth.nombre.charAt(0) }}</div>
+        </div>
+      </header>
+
+      <div class="dashboard-content">
+        <div class="data-card">
+          <div class="card-header">
+            <h2><span class="icon">🎯</span> Crear Misión</h2>
+            <router-link class="btn-back" :to="{ name: 'dashboard' }">← Volver al Dashboard</router-link>
+          </div>
+
+          <div class="card">
         <div class="form-group">
           <label>Tipo de Misión</label>
           <select v-model="tipo">
@@ -35,22 +50,27 @@
           <p class="hint">Formato: {"waypoints": [[lat, lon], [lat, lon]]}</p>
         </div>
 
-        <p v-if="error" class="error-msg">{{ error }}</p>
+            <p v-if="error" class="error-msg">{{ error }}</p>
 
-        <button class="btn-primary" @click="guardar" :disabled="loading">
-          {{ loading ? 'Guardando...' : 'Crear Misión' }}
-        </button>
+            <button class="btn-primary" @click="guardar" :disabled="loading">
+              {{ loading ? 'Guardando...' : 'Crear Misión' }}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 import api from '../api/axios';
+import Sidebar from '../components/Sidebar.vue';
 
 const router = useRouter();
+const auth = useAuthStore();
 const loading = ref(false);
 const error = ref('');
 const dronesDisponibles = ref([]);
@@ -103,10 +123,71 @@ const guardar = async () => {
     loading.value = false;
   }
 };
+
+const logout = () => {
+  auth.logout();
+  router.push('/login');
+};
+
+const navigateTo = (route) => {
+  router.push(route);
+};
 </script>
 
 <style scoped>
-.form-container { max-width: 600px; margin: 0 auto; }
+/* Reused dashboard layout styles */
+.dashboard-container {
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2rem;
+}
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e7ff;
+}
+.header-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #eef2ff;
+  border-radius: 50px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.user-details { display: flex; flex-direction: column; align-items: flex-end; }
+.user-name { font-weight: 600; color: #1f2937; }
+.user-role { font-size: 0.9rem; color: #6366f1; }
+.user-avatar {
+  width: 40px; height: 40px; background: #6366f1; color: white;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+}
+
+.dashboard-content { display: flex; flex-direction: column; }
+.data-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(99,102,241,0.08); border: 1px solid #e0e7ff; }
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.card { background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e6eefc; }
+.btn-back { background: transparent; color: #6366f1; border: none; text-decoration: none; font-weight:600; padding: 8px 12px; border-radius: 8px; }
+.btn-back:hover { background: #eef2ff; }
+
+/* Original form styles */
+.form-container { max-width: 700px; margin: 0 auto; }
 .form-group { margin-bottom: 1.5rem; text-align: left; }
 label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
 select, textarea {
