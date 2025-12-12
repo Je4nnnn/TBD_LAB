@@ -16,7 +16,12 @@
         </template>
         <!-- -------------------------------- -->
 
-        <RouterLink class="btn" to="/reportes">Reportes</RouterLink>
+        <!-- NUEVO: Botón para las Consultas SQL (Preguntas 1-9) -->
+        <RouterLink class="btn" to="/reportes/avanzados">Reportes SQL</RouterLink>
+
+        <!-- Botón existente para el Resumen (Vista Materializada - Pregunta 10) -->
+        <RouterLink class="btn" to="/reportes">Resumen MV</RouterLink>
+
         <strong>{{ auth.user.nombre }}</strong> ({{ auth.user.rol }})
         <button @click="logout">Salir</button>
       </div>
