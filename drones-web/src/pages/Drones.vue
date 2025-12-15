@@ -126,6 +126,12 @@
             </div>
           </div>
 
+          <!-- Mensaje de error de eliminación -->
+          <div v-if="deleteError" class="delete-error-msg" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ deleteError }}</span>
+            <button @click="deleteError = ''" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 1.2rem; padding: 0 8px;">&times;</button>
+          </div>
+
           <!-- Estados de carga y contenido -->
           <div class="table-container">
             <!-- Loading state -->
@@ -173,15 +179,15 @@
                   <div class="card-body">
                     <div class="spec">
                       <span class="spec-label">Capacidad:</span>
-                      <span class="spec-value">{{ drone.capacidadCargaKg || 'N/A' }} kg</span>
+                      <span class="spec-value">{{ drone.capacidad_kg ?? drone.capacidadCargaKg ?? 'N/A' }} kg</span>
                     </div>
                     <div class="spec">
                       <span class="spec-label">Autonomía:</span>
-                      <span class="spec-value">{{ drone.autonomiaMin || 'N/A' }} min</span>
+                      <span class="spec-value">{{ drone.autonomia_min ?? drone.autonomiaMin ?? 'N/A' }} min</span>
                     </div>
                   </div>
 
-                  <div class="card-footer">
+                  <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <span
                       class="status-badge"
                       :class="drone.estado.toLowerCase().replace(' ', '_')"
@@ -189,6 +195,7 @@
                     >
                       {{ drone.estado }}
                     </span>
+                    <button type="button" class="btn-eliminar" @click="eliminarDron(drone.id, $event)" title="Eliminar dron">Eliminar</button>
                   </div>
                 </article>
               </div>
@@ -209,8 +216,8 @@
                     <tr v-for="drone in filteredDrones" :key="drone.id">
                       <td class="drone-id-cell">{{ drone.id }}</td>
                       <td class="drone-model-cell">{{ drone.modelo }}</td>
-                      <td class="drone-capacity-cell">{{ drone.capacidadCargaKg || 'N/A' }}</td>
-                      <td class="drone-autonomy-cell">{{ drone.autonomiaMin || 'N/A' }}</td>
+                      <td class="drone-capacity-cell">{{ drone.capacidad_kg ?? drone.capacidadCargaKg ?? 'N/A' }}</td>
+                      <td class="drone-autonomy-cell">{{ drone.autonomia_min ?? drone.autonomiaMin ?? 'N/A' }}</td>
                       <td class="drone-status-cell">
                         <span
                           class="status-badge"
@@ -219,6 +226,7 @@
                         >
                           {{ drone.estado }}
                         </span>
+                        <button type="button" class="btn-eliminar" @click="eliminarDron(drone.id, $event)" title="Eliminar dron">Eliminar</button>
                       </td>
                     </tr>
                   </tbody>
@@ -246,6 +254,7 @@ const router = useRouter();
 const drones = ref([]);
 const loading = ref(true);
 const error = ref('');
+const deleteError = ref('');
 
 // Filtros y búsqueda
 const searchQuery = ref('');
@@ -345,11 +354,11 @@ const filteredDrones = computed(() => {
       aVal = a.modelo.toLowerCase();
       bVal = b.modelo.toLowerCase();
     } else if (sortBy.value.includes('capacidad')) {
-      aVal = a.capacidadCargaKg;
-      bVal = b.capacidadCargaKg;
+      aVal = a.capacidad_kg ?? a.capacidadCargaKg ?? 0;
+      bVal = b.capacidad_kg ?? b.capacidadCargaKg ?? 0;
     } else if (sortBy.value.includes('autonomia')) {
-      aVal = a.autonomiaMin;
-      bVal = b.autonomiaMin;
+      aVal = a.autonomia_min ?? a.autonomiaMin ?? 0;
+      bVal = b.autonomia_min ?? b.autonomiaMin ?? 0;
     }
 
     if (sortBy.value.includes('-desc')) {
@@ -383,6 +392,109 @@ const statusCounts = computed(() => {
 });
 
 
+
+// Función para validar UUID
+const isValidUUID = (str) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
+// Eliminar un dron
+const eliminarDron = async (id, event) => {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  
+  // Validar que el ID sea un UUID válido (no un ID mock)
+  if (!isValidUUID(id)) {
+    deleteError.value = 'No se puede eliminar un dron de prueba. Solo se pueden eliminar drones reales del sistema.';
+    setTimeout(() => { deleteError.value = ''; }, 5000);
+    return;
+  }
+  
+  if (!window.confirm('¿Seguro que deseas eliminar este dron?')) return;
+  deleteError.value = '';
+  const wasLoading = loading.value;
+  loading.value = true;
+  
+  // Verificar que el token existe antes de hacer la petición
+  const token = localStorage.getItem('token');
+  if (!token) {
+    deleteError.value = 'Tu sesión expiró. Por favor, inicia sesión nuevamente.';
+    loading.value = wasLoading;
+    setTimeout(() => { deleteError.value = ''; }, 5000);
+    return;
+  }
+  
+  // Verificar que el token sigue siendo válido haciendo un GET primero
+  try {
+    const testGet = await api.get('/drones');
+    console.log('Token válido, GET funciona. Intentando DELETE...');
+  } catch (getError) {
+    console.error('Token inválido, GET falló:', getError);
+    deleteError.value = 'Tu sesión expiró. Por favor, recarga la página e inicia sesión nuevamente.';
+    loading.value = wasLoading;
+    setTimeout(() => {
+      auth.logout();
+      router.push('/login');
+    }, 3000);
+    return;
+  }
+  
+  try {
+    // Hacer el DELETE con el token verificado
+    console.log('Enviando DELETE con token:', token.substring(0, 20) + '...');
+    // El interceptor ya agrega el header, no necesitamos pasarlo explícitamente
+    await api.delete(`/drones/${id}`);
+    await loadDrones();
+  } catch (e) {
+    console.error('Error al eliminar dron:', e);
+    console.error('Token presente:', !!token);
+    console.error('Response status:', e?.response?.status);
+    console.error('Response data:', e?.response?.data);
+    
+    // Manejar diferentes tipos de errores
+    if (e?.response?.status === 409) {
+      // Conflicto - el dron tiene misiones asociadas
+      deleteError.value = 'No se puede eliminar el dron porque tiene misiones asociadas. Primero elimina o completa las misiones.';
+      setTimeout(() => { deleteError.value = ''; }, 7000);
+    } else if (e?.response?.status === 404) {
+      deleteError.value = 'El dron no fue encontrado.';
+      setTimeout(() => { deleteError.value = ''; }, 5000);
+    } else if (e?.response?.status === 401) {
+      // Verificar si el token sigue siendo válido intentando recargar los drones
+      try {
+        const testResponse = await api.get('/drones');
+        // Si GET funciona, el token es válido, entonces el problema es específico del DELETE
+        deleteError.value = 'Error al eliminar el dron. Por favor, intenta nuevamente.';
+        await loadDrones();
+      } catch (getError) {
+        // Si GET también falla, el token definitivamente expiró
+        deleteError.value = 'Tu sesión expiró. Por favor, recarga la página e inicia sesión nuevamente.';
+        setTimeout(() => {
+          auth.logout();
+          router.push('/login');
+        }, 3000);
+      }
+      setTimeout(() => { deleteError.value = ''; }, 5000);
+    } else if (e?.response?.status === 400) {
+      deleteError.value = 'El ID del dron no es válido.';
+      setTimeout(() => { deleteError.value = ''; }, 5000);
+    } else {
+      // Error 500 u otro error del servidor
+      const errorMessage = e?.response?.data?.message || e?.response?.data || 'Error desconocido';
+      if (errorMessage.includes('misiones') || errorMessage.includes('foreign key')) {
+        deleteError.value = 'No se puede eliminar el dron porque tiene misiones asociadas. Primero elimina o completa las misiones.';
+      } else {
+        deleteError.value = 'No se pudo eliminar el dron. Intenta nuevamente.';
+      }
+      setTimeout(() => { deleteError.value = ''; }, 7000);
+    }
+  } finally {
+    loading.value = wasLoading;
+  }
+};
 
 // Función para cargar drones
 const loadDrones = async () => {
@@ -1120,4 +1232,27 @@ table tr:focus-within {
 .btn-create:hover {
   background: #6366f1;
 }
+.btn-eliminar {
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  margin-left: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-eliminar:hover {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-eliminar:hover {
+  background: #b91c1c;
+}
+
 </style>

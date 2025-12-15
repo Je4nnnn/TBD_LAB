@@ -11,8 +11,11 @@
               <strong>{{ d.modelo }}</strong>
               <span :style="pill(d.estado)">{{ d.estado }}</span>
             </header>
-            <p style="margin:8px 0 0;">Batería: <b>{{ d.bateria_pct ?? '—' }}%</b></p>
+            <p style="margin:8px 0 0;">Capacidad: <b>{{ d.capacidad_kg ?? '—' }} kg</b></p>
+            <p style="margin:4px 0 0;">Autonomía: <b>{{ d.autonomia_min ?? '—' }} min</b></p>
+            <p style="margin:4px 0 0;">Batería: <b>{{ d.bateria_pct ?? '—' }}%</b></p>
             <p style="margin:4px 0 0;">Última pos.: <code v-if="d.ultima_lat !== null">{{ d.ultima_lat }}, {{ d.ultima_lon }}</code><span v-else>—</span></p>
+            <button class="btn-elim" @click="eliminarDron(d.id)">Eliminar</button>
           </article>
         </div>
         <!-- Requisito: reservar espacio para mapa -->
@@ -31,6 +34,13 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
 const drones = ref([]);
+
+async function eliminarDron(id) {
+  if (!confirm('¿Seguro que deseas eliminar este dron?')) return;
+  await http.delete(`/drones/${id}`);
+  drones.value = drones.value.filter(d => d.id !== id);
+}
+
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -69,4 +79,21 @@ onMounted(async () => {
   margin-left: 260px;
   padding: 2rem;
 }
+
+.btn-elim {
+  margin-top: 12px;
+  width: 100%;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-elim:hover {
+  background: #b91c1c;
+}
+
 </style>

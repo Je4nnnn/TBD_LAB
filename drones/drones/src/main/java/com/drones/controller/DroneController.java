@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/drones")
@@ -26,4 +27,20 @@ public class DroneController {
         return ResponseEntity.ok(Map.of("id", id));
     }
     // ----------------------
+
+    // Eliminar dron
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable UUID id) {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("[DroneController] DELETE /drones/" + id + " - Autenticación: " + (auth != null && auth.isAuthenticated() ? "SÍ (Usuario: " + auth.getName() + ")" : "NO"));
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            drones.eliminar(id);
+            return ResponseEntity.noContent().build();
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw e; // Re-lanzar para que Spring lo maneje correctamente
+        }
+    }
 }

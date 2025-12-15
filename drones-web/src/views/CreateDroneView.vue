@@ -27,17 +27,27 @@
               <input v-model="modelo" placeholder="Ej: DJI-Mavic-3" type="text" />
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Capacidad (Kg)</label>
-                <input v-model.number="capacidad" type="number" step="0.1" min="0" placeholder="0.0" />
-              </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Capacidad (Kg)</label>
+          <input v-model.number="capacidad" type="number" step="0.1" min="0" placeholder="0.0" />
+        </div>
 
-              <div class="form-group">
-                <label>Autonomía (minutos)</label>
-                <input v-model.number="autonomia" type="number" step="1" min="0" placeholder="0" />
-              </div>
-            </div>
+        <div class="form-group">
+          <label>Autonomía (minutos)</label>
+          <input v-model.number="autonomia" type="number" step="1" min="0" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Latitud inicial</label>
+          <input v-model.number="lat" type="number" step="0.000001" min="-90" max="90" placeholder="Ej: -33.450000" />
+        </div>
+        <div class="form-group">
+          <label>Longitud inicial</label>
+          <input v-model.number="lon" type="number" step="0.000001" min="-180" max="180" placeholder="Ej: -70.660000" />
+        </div>
+      </div>
 
             <div class="info-box">
               <small>El dron se creará con estado <b>Disponible</b> y Batería al <b>100%</b> por defecto.</small>
@@ -73,6 +83,8 @@ const error = ref('');
 const modelo = ref('');
 const capacidad = ref('');
 const autonomia = ref('');
+const lat = ref(null);
+const lon = ref(null);
 
 const navigateTo = (route) => {
   router.push(route);
@@ -84,8 +96,8 @@ const logout = () => {
 };
 
 const guardar = async () => {
-  if (!modelo.value || !capacidad.value || !autonomia.value) {
-    error.value = 'Todos los campos son obligatorios.';
+  if (!modelo.value || !capacidad.value || !autonomia.value || lat.value === null || lon.value === null) {
+    error.value = 'Todos los campos son obligatorios, incluida la ubicación.';
     return;
   }
 
@@ -96,7 +108,9 @@ const guardar = async () => {
     await api.post('/drones', {
       modelo: modelo.value,
       capacidad_kg: parseFloat(capacidad.value),
-      autonomia_min: parseInt(autonomia.value)
+      autonomia_min: parseInt(autonomia.value),
+      lat: lat.value,
+      lon: lon.value
     });
 
     router.push('/drones');

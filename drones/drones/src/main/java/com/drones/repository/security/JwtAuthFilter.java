@@ -33,6 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 2) Autenticación por JWT (si viene el header)
         String hdr = req.getHeader(HttpHeaders.AUTHORIZATION);
+        System.out.println("[JwtAuthFilter] " + req.getMethod() + " " + req.getRequestURI() + " - Header Authorization: " + (hdr != null ? "presente" : "ausente"));
         if (hdr != null && hdr.startsWith("Bearer ")) {
             String token = hdr.substring(7);
             try {
@@ -42,9 +43,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 var auth = new UsernamePasswordAuthenticationToken(
                         userId, null, List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ignored) {
+                System.out.println("[JwtAuthFilter] Autenticación exitosa para " + req.getMethod() + " " + req.getRequestURI() + " - Usuario: " + userId + ", Rol: " + rol);
+            } catch (Exception e) {
                 // token inválido -> seguimos sin autenticación
+                System.err.println("[JwtAuthFilter] Error al parsear token para " + req.getMethod() + " " + req.getRequestURI() + ": " + e.getMessage());
+                e.printStackTrace();
             }
+        } else {
+            // Log cuando no hay header de autorización
+            System.err.println("[JwtAuthFilter] No se encontró header Authorization para " + req.getMethod() + " " + req.getRequestURI());
         }
 
         chain.doFilter(req, res);

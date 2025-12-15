@@ -9,7 +9,9 @@ public final class DroneDtos {
     public record CrearDronReq(
             @NotBlank String modelo,
             @NotNull @Min(0) Double capacidad_kg,
-            @NotNull @Min(0) Integer autonomia_min
+            @NotNull @Min(0) Integer autonomia_min,
+            Double lat,
+            Double lon
     ) {}
 
     private DroneDtos() {}
