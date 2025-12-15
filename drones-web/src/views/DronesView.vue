@@ -17,7 +17,6 @@
         </div>
         <!-- Requisito: reservar espacio para mapa -->
         <div style="margin-top:24px;border:2px dashed #334155;border-radius:12px;height:320px;display:grid;place-items:center;">
-          <em>Mapa (placeholder). Aquí irá Leaflet/Mapbox con rutas y posiciones en vivo.</em>
         </div>
       </section>
     </main>

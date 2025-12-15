@@ -40,8 +40,8 @@
         <h1 class="header-title">Gestión de Drones</h1>
         <div class="user-info">
           <div class="user-details">
-            <span class="user-name">{{ auth.nombre }}</span>
-            <span class="user-role">({{ auth.rol }})</span>
+            <span class="user-name">{{ auth.nombre || 'Usuario' }}</span>
+            <span class="user-role">({{ auth.rol || 'Rol no definido' }})</span>
           </div>
           <div class="user-avatar">{{ auth.nombre.charAt(0) }}</div>
         </div>
@@ -90,9 +90,12 @@
         <div class="data-card">
           <div class="card-header">
             <h2><span class="icon">🛸</span> Lista de Drones</h2>
-            <button class="refresh-btn" @click="loadDrones" :disabled="loading">
-              {{ loading ? 'Cargando...' : 'Refrescar' }}
-            </button>
+            <div class="header-actions">
+              <button class="refresh-btn" @click="loadDrones" :disabled="loading">
+                {{ loading ? 'Cargando...' : 'Refrescar' }}
+              </button>
+              <router-link to="/drones/nuevo" class="btn-create">Crear Dron</router-link>
+            </div>
           </div>
 
           <!-- Controles de filtrado y búsqueda -->
@@ -1082,5 +1085,39 @@ tbody tr:nth-child(even) {
 table tr:focus-within {
   outline: 2px solid #6366f1;
   outline-offset: -2px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-create {
+  background: #6366f1;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+}
+
+.btn-create:hover {
+  background: #6366f1;
 }
 </style>

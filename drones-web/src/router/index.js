@@ -5,7 +5,7 @@ import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import ReportsView from '../views/ReportsView.vue';
 import CreateMissionView from '../views/CreateMissionView.vue';
-import CreateDroneView from '../views/CreateDroneView.vue'; // <--- IMPORTAR NUEVA VISTA
+import CreateDroneView from '../views/CreateDroneView.vue'; 
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -17,7 +17,7 @@ const routes = [
   { path: '/drones', name: 'drones', component: () => import('../pages/Drones.vue') },
   { path: '/misiones/nueva', name: 'crear-mision', component: CreateMissionView },
   { path: '/drones/nuevo', name: 'crear-dron', component: CreateDroneView },
-  // ------------------
+
 ];
 
 const router = createRouter({

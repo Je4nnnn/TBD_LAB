@@ -1303,6 +1303,7 @@ table tr:focus-within {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(99,102,241,0.15);
   transition: background 0.2s;
+  text-decoration: none;
 }
 .crear-btn:hover:not(:disabled) {
   background: #4f46e5;

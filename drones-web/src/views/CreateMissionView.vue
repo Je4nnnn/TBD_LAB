@@ -136,6 +136,7 @@ const navigateTo = (route) => {
 
 <style scoped>
 /* Reused dashboard layout styles */
+
 .dashboard-container {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
   display: flex;
@@ -161,6 +162,7 @@ const navigateTo = (route) => {
   color: #1f2937;
   margin: 0;
 }
+
 .user-info {
   display: flex;
   align-items: center;
@@ -179,12 +181,37 @@ const navigateTo = (route) => {
   font-weight: 600; box-shadow: 0 2px 8px rgba(99,102,241,0.25);
 }
 
-.dashboard-content { display: flex; flex-direction: column; }
-.data-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(99,102,241,0.08); border: 1px solid #e0e7ff; }
-.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.dashboard-content { 
+  display: flex; 
+  flex-direction: column; 
+  text-decoration: none;
+}
+.data-card { 
+  background: #fff; 
+  border-radius: 12px; 
+  padding: 1.5rem; 
+  box-shadow: 0 4px 12px rgba(99,102,241,0.08); border: 1px solid #e0e7ff; 
+}
+.card-header { 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  margin-bottom:1rem; 
+  text-decoration: none;
+}
+
 .card { background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e6eefc; }
-.btn-back { background: transparent; color: #6366f1; border: none; text-decoration: none; font-weight:600; padding: 8px 12px; border-radius: 8px; }
-.btn-back:hover { background: #eef2ff; }
+.btn-back { 
+  background: transparent; 
+  color: #6366f1; border: 
+  none; text-decoration: none; 
+  font-weight:600; padding: 8px 12px; 
+  border-radius: 8px; 
+}
+.btn-back:hover { 
+  background: #eef2ff; 
+  text-decoration: none;
+}
 
 /* Original form styles */
 .form-container { max-width: 700px; margin: 0 auto; }
